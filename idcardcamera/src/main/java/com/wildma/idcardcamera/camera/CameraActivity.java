@@ -4,12 +4,10 @@ import android.Manifest;
 import android.app.Activity;
 import android.content.Intent;
 import android.content.pm.ActivityInfo;
-import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
 import android.hardware.Camera;
 import android.os.Bundle;
 import android.os.Handler;
-import android.util.Log;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.FrameLayout;
@@ -18,19 +16,21 @@ import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.karumi.dexter.Dexter;
+import com.karumi.dexter.MultiplePermissionsReport;
+import com.karumi.dexter.PermissionToken;
+import com.karumi.dexter.listener.PermissionRequest;
+import com.karumi.dexter.listener.multi.MultiplePermissionsListener;
 import com.wildma.idcardcamera.R;
 import com.wildma.idcardcamera.cropper.CropImageView;
 import com.wildma.idcardcamera.cropper.CropListener;
 import com.wildma.idcardcamera.utils.CommonUtils;
 import com.wildma.idcardcamera.utils.FileUtils;
 import com.wildma.idcardcamera.utils.ImageUtils;
-import com.wildma.idcardcamera.utils.PermissionUtils;
 import com.wildma.idcardcamera.utils.ScreenUtils;
 
 import java.io.File;
-
-import androidx.core.app.ActivityCompat;
-
+import java.util.List;
 
 /**
  * Author       wildma
@@ -60,44 +60,61 @@ public class CameraActivity extends Activity implements View.OnClickListener {
         super.onCreate(savedInstanceState);
 
         /*动态请求需要的权限*/
-        boolean checkPermissionFirst = PermissionUtils.checkPermissionFirst(this, IDCardCamera.PERMISSION_CODE_FIRST,
-                new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE, Manifest.permission.READ_EXTERNAL_STORAGE, Manifest.permission.CAMERA});
-        if (checkPermissionFirst) {
-            init();
-        }
-    }
-
-    /**
-     * 处理请求权限的响应
-     *
-     * @param requestCode  请求码
-     * @param permissions  权限数组
-     * @param grantResults 请求权限结果数组
-     */
-    @Override
-    public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
-        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
-        boolean isPermissions = true;
-        for (int i = 0; i < permissions.length; i++) {
-            if (grantResults[i] == PackageManager.PERMISSION_DENIED) {
-                isPermissions = false;
-                if (!ActivityCompat.shouldShowRequestPermissionRationale(this, permissions[i])) { //用户选择了"不再询问"
-                    if (isToast) {
-                        Toast.makeText(this, "请手动打开该应用需要的权限", Toast.LENGTH_SHORT).show();
-                        isToast = false;
-                    }
+        Dexter.withContext(this).withPermissions(Manifest.permission.WRITE_EXTERNAL_STORAGE,
+                Manifest.permission.READ_EXTERNAL_STORAGE, Manifest.permission.CAMERA).withListener(new MultiplePermissionsListener() {
+            @Override
+            public void onPermissionsChecked(MultiplePermissionsReport multiplePermissionsReport) {
+                if (multiplePermissionsReport.areAllPermissionsGranted()) {
+                    init();
+                } else {
+                    Toast.makeText(CameraActivity.this, "Vui lòng cấp quyền ứng dụng", Toast.LENGTH_SHORT).show();
+                    finish();
                 }
             }
-        }
-        isToast = true;
-        if (isPermissions) {
-            Log.d("onRequestPermission", "onRequestPermissionsResult: " + "允许所有权限");
-            init();
-        } else {
-            Log.d("onRequestPermission", "onRequestPermissionsResult: " + "有权限不允许");
-            finish();
-        }
+
+            @Override
+            public void onPermissionRationaleShouldBeShown(List<PermissionRequest> list, PermissionToken permissionToken) {
+                permissionToken.continuePermissionRequest();
+            }
+        }).check();
+//        boolean checkPermissionFirst = PermissionUtils.checkPermissionFirst(this, IDCardCamera.PERMISSION_CODE_FIRST,
+//                new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE, Manifest.permission.READ_EXTERNAL_STORAGE, Manifest.permission.CAMERA});
+//        if (checkPermissionFirst) {
+//            init();
+//        }
     }
+
+//    /**
+//     * 处理请求权限的响应
+//     *
+//     * @param requestCode  请求码
+//     * @param permissions  权限数组
+//     * @param grantResults 请求权限结果数组
+//     */
+//    @Override
+//    public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
+//        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+//        boolean isPermissions = true;
+//        for (int i = 0; i < permissions.length; i++) {
+//            if (grantResults[i] == PackageManager.PERMISSION_DENIED) {
+//                isPermissions = false;
+//                if (!ActivityCompat.shouldShowRequestPermissionRationale(this, permissions[i])) { //用户选择了"不再询问"
+//                    if (isToast) {
+//                        Toast.makeText(this, "请手动打开该应用需要的权限", Toast.LENGTH_SHORT).show();
+//                        isToast = false;
+//                    }
+//                }
+//            }
+//        }
+//        isToast = true;
+//        if (isPermissions) {
+//            Log.d("onRequestPermission", "onRequestPermissionsResult: " + "允许所有权限");
+//            init();
+//        } else {
+//            Log.d("onRequestPermission", "onRequestPermissionsResult: " + "有权限不允许");
+//            finish();
+//        }
+//    }
 
     private void init() {
         setContentView(R.layout.activity_camera);
