@@ -1,0 +1,7 @@
+<resources>
+  <string name="app_name">IDCardCamera</string>
+
+  <string name="touch_to_focus">Chạm để lấy nét</string>
+  <string name="crop_fail">Crop failed</string>
+  <string name="no_flash">No flash</string>
+</resources>
