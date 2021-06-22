@@ -60,23 +60,46 @@ public class CameraActivity extends Activity implements View.OnClickListener {
         super.onCreate(savedInstanceState);
 
         /*动态请求需要的权限*/
-        Dexter.withContext(this).withPermissions(Manifest.permission.WRITE_EXTERNAL_STORAGE,
-                Manifest.permission.READ_EXTERNAL_STORAGE, Manifest.permission.CAMERA).withListener(new MultiplePermissionsListener() {
-            @Override
-            public void onPermissionsChecked(MultiplePermissionsReport multiplePermissionsReport) {
-                if (multiplePermissionsReport.areAllPermissionsGranted()) {
-                    init();
-                } else {
-                    Toast.makeText(CameraActivity.this, "Vui lòng cấp quyền ứng dụng", Toast.LENGTH_SHORT).show();
-                    finish();
+//        Manifest.permission.WRITE_EXTERNAL_STORAGE
+        if (android.os.Build.VERSION.SDK_INT < 29) {
+            Dexter.withContext(this).withPermissions(
+                    Manifest.permission.READ_EXTERNAL_STORAGE, Manifest.permission.WRITE_EXTERNAL_STORAGE,
+                    Manifest.permission.CAMERA).withListener(new MultiplePermissionsListener() {
+                @Override
+                public void onPermissionsChecked(MultiplePermissionsReport multiplePermissionsReport) {
+                    if (multiplePermissionsReport.areAllPermissionsGranted()) {
+                        init();
+                    } else {
+                        Toast.makeText(CameraActivity.this, "Vui lòng cấp quyền ứng dụng", Toast.LENGTH_SHORT).show();
+                        finish();
+                    }
                 }
-            }
 
-            @Override
-            public void onPermissionRationaleShouldBeShown(List<PermissionRequest> list, PermissionToken permissionToken) {
-                permissionToken.continuePermissionRequest();
-            }
-        }).check();
+                @Override
+                public void onPermissionRationaleShouldBeShown(List<PermissionRequest> list, PermissionToken permissionToken) {
+                    permissionToken.continuePermissionRequest();
+                }
+            }).check();
+        } else {
+            Dexter.withContext(this).withPermissions(
+                    Manifest.permission.READ_EXTERNAL_STORAGE, Manifest.permission.CAMERA).withListener(new MultiplePermissionsListener() {
+                @Override
+                public void onPermissionsChecked(MultiplePermissionsReport multiplePermissionsReport) {
+                    if (multiplePermissionsReport.areAllPermissionsGranted()) {
+                        init();
+                    } else {
+                        Toast.makeText(CameraActivity.this, "Vui lòng cấp quyền ứng dụng", Toast.LENGTH_SHORT).show();
+                        finish();
+                    }
+                }
+
+                @Override
+                public void onPermissionRationaleShouldBeShown(List<PermissionRequest> list, PermissionToken permissionToken) {
+                    permissionToken.continuePermissionRequest();
+                }
+            }).check();
+        }
+
 //        boolean checkPermissionFirst = PermissionUtils.checkPermissionFirst(this, IDCardCamera.PERMISSION_CODE_FIRST,
 //                new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE, Manifest.permission.READ_EXTERNAL_STORAGE, Manifest.permission.CAMERA});
 //        if (checkPermissionFirst) {
